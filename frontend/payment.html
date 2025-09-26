@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payments</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h2>💳 Transactions</h2>
+  <div id="transactions"></div>
+  <button onclick="window.location.href='expenses.html'">View Expenses</button>
+
+  <script>
+    const API_BASE = "https://spongy-unharrowed-cristina.ngrok-free.dev";
+
+    async function getTransactions() {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/transactions`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      return res.json();
+    }
+
+    async function showTransactions() {
+      const txs = await getTransactions();
+      const container = document.getElementById('transactions');
+      container.innerHTML = '';
+      txs.forEach(tx => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <div class="front">₹${tx.amount} → ${tx.to} (${tx.status})</div>
+          <div class="back">
+            <textarea placeholder="Add note">${tx.note}</textarea>
+            <button onclick="updateNote('${tx._id}', this.previousElementSibling.value)">Save</button>
+          </div>
+        `;
+        // Flip effect
+        card.addEventListener('click', () => card.classList.toggle('flipped'));
+        container.appendChild(card);
+      });
+    }
+
+    async function updateNote(id, note) {
+      const token = localStorage.getItem('token');
+      await fetch(`${API_BASE}/transactions/${id}`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ note })
+      });
+      alert('Note saved!');
+      showTransactions();
+    }
+
+    showTransactions();
+  </script>
+</body>
+</html>

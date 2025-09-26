@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Analytics - MyExpense</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <h2>Expense Analytics</h2>
+  <canvas id="pieChart"></canvas>
+  <canvas id="lineChart"></canvas>
+  <button onclick="window.location.href='dashboard.html'">⬅ Back</button>
+
+  <script>
+    const API_BASE = "https://spongy-unharrowed-cristina.ngrok-free.dev";
+    const token = localStorage.getItem("token");
+    if (!token) window.location.href = "login.html";
+
+    async function loadAnalytics() {
+      // Category Pie
+      const res1 = await fetch(`${API}/transactions/analytics/category`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const catData = await res1.json();
+      new Chart(document.getElementById("pieChart"), {
+        type: "pie",
+        data: {
+          labels: catData.map(c => c._id),
+          datasets: [{ data: catData.map(c => c.total) }]
+        }
+      });
+
+      // Monthly Line
+      const res2 = await fetch(`${API}/transactions/analytics/monthly`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const monthData = await res2.json();
+      new Chart(document.getElementById("lineChart"), {
+        type: "line",
+        data: {
+          labels: monthData.map(m => `${m._id.month}/${m._id.year}`),
+          datasets: [{ label: "Monthly Total", data: monthData.map(m => m.total) }]
+        }
+      });
+    }
+
+    loadAnalytics();
+  </script>
+</body>
+</html>

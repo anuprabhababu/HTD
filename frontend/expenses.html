@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Expenses Timeline</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<header>
+  <h1>Expenses Timeline</h1>
+</header>
+
+<div id="chartContainer">
+  <canvas id="expenseChart" width="300" height="300"></canvas>
+</div>
+
+<div class="timeline-container" id="timelineContainer"></div>
+
+<script>
+  const API_BASE = "https://spongy-unharrowed-cristina.ngrok-free.dev";
+
+// Persist dark mode
+const savedTheme = localStorage.getItem("theme");
+if(savedTheme === "dark") document.body.classList.add("dark");
+
+// Load payments
+const timelineContainer = document.getElementById("timelineContainer");
+const payments = JSON.parse(localStorage.getItem("paymentsData")) || [];
+
+// Build timeline text-only
+payments.forEach(p => {
+  const div = document.createElement("div");
+  div.className = "timeline-item";
+  div.textContent = `₹${p.amount} - ${p.date} ${p.time} - ${p.purpose || p.holder}`;
+  timelineContainer.appendChild(div);
+});
+
+// Group payments by purpose for pie chart
+const groupedData = {};
+payments.forEach(p => {
+  const key = p.purpose || p.holder;
+  if(groupedData[key]) {
+    groupedData[key] += p.amount;
+  } else {
+    groupedData[key] = p.amount;
+  }
+});
+
+// Prepare chart data
+const labels = Object.keys(groupedData);
+const data = Object.values(groupedData);
+
+// Assign consistent colors
+const colorPalette = ['#7c3aed','#14b8a6','#10b981','#f59e0b','#ef4444','#8b5cf6','#22d3ee','#f97316'];
+const backgroundColors = labels.map((_, index) => colorPalette[index % colorPalette.length]);
+
+// Draw pie chart
+const ctx = document.getElementById('expenseChart').getContext('2d');
+new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Expenses',
+        data: data,
+        backgroundColor: backgroundColors
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { position: 'bottom', labels: { color: 'var(--text-color)' } } }
+    }
+});
+</script>
+</body>
+</html>
